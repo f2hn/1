@@ -1,0 +1,76 @@
+#nodejs
+curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+sudo dnf install -y nodejs
+#nginx
+dnf instal -y nginx
+#repo postgres
+dnf install -y https://download.postgresql.org/pub/repos/yum/15/redhat/rhel-9.4-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+dnf install -y https://download.postgresql.org/pub/repos/yum/16/redhat/rhel-9.4-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+#non aftif defaul version
+dnf -qy module disable postgresql
+#postgres
+dnf install -y postgresql-server postgresql-contrib
+dnf install -y postgresql15-server postgresql15-contrib
+#setup postgres
+/usr/pgsql-15/bin/postgresql-15-setup initdb
+#pm2
+npm install -g pm2
+pm2 startup systemd
+#extra package
+dnf install -y epel-release
+#repo by license
+sudo subscription-manager status
+sudo subscription-manager register --username <username_redhat> --password <password_redhat>
+sudo subscription-manager repos --enable=rhel-9-for-x86_64-baseos-rpms
+sudo subscription-manager repos --enable=rhel-9-for-x86_64-appstream-rpms
+#by repo list
+sudo nano /etc/yum.repos.d/pgdg-redhat-all.repo
+##
+[pgdg16]
+name=PostgreSQL 16 for RHEL 9
+baseurl=https://download.postgresql.org/pub/repos/yum/16/redhat/rhel-9.4-x86_64/
+enabled=1
+gpgcheck=1
+gpgkey=https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG
+##
+#inteface
+nmcli connection show
+sudo nmcli connection modify "Wired connection 1" ipv4.addresses 192.168.1.100/24
+sudo nmcli connection modify "Wired connection 1" ipv4.gateway 192.168.1.1
+sudo nmcli connection modify "Wired connection 1" ipv4.dns 8.8.8.8
+sudo nmcli connection modify "Wired connection 1" ipv4.method manual
+sudo nmcli connection up "Wired connection 1"
+or
+sudo nano /etc/sysconfig/network-scripts/ifcfg-ens33
+DEVICE=ens33
+BOOTPROTO=none
+ONBOOT=yes
+IPADDR=192.168.1.100
+PREFIX=24
+GATEWAY=192.168.1.1
+DNS1=8.8.8.8
+sudo systemctl restart NetworkManager
+#firewall
+sudo firewall-cmd --get-active-zones
+sudo firewall-cmd --zone=public --add-port=80/tcp --permanent
+sudo firewall-cmd --zone=public --add-port=443/tcp --permanent
+sudo firewall-cmd --reload
+sudo firewall-cmd --zone=public --add-service=ssh --permanent
+sudo firewall-cmd --zone=public --remove-service=ssh --permanent
+sudo firewall-cmd --list-all
+sudo systemctl stop firewalld # disable
+#sudo dnf install openssh-server
+#for nginx
+sudo adduser nginxadmin
+sudo passwd nginxadmin
+sudo usermod -aG wheel nginxadmin
+echo 'nginxadmin ALL=(ALL) NOPASSWD: /usr/sbin/nginx' | sudo tee -a /etc/sudoers
+sudo chown -R nginxadmin:nginxadmin /etc/nginx
+echo 'nginxadmin ALL=(ALL) NOPASSWD: /bin/systemctl start nginx, /bin/systemctl stop nginx, /bin/systemctl restart nginx' | sudo tee -a /etc/sudoers
+#postgres
+sudo -u postgres psql
+CREATE USER newuser WITH PASSWORD 'newpassword';
+CREATE DATABASE newdatabase;
+GRANT ALL PRIVILEGES ON DATABASE newdatabase TO newuser;
+ALTER USER newuser WITH PASSWORD 'newpassword';
+\q
