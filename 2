@@ -1,0 +1,87 @@
+			
+upgrade package	
+dnf check-update	
+check for update	
+dnf upgrade -y	
+
+	
+
+subscription-manager repos --enable codeready-builder-for-rhel-9-$(arch)-rpms
+dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm	
+
+	
+
+dnf install nano htop screen httpd firewalld wget git mlocate -y		
+	
+dnf install grubby	
+
+
+grubby --update-kernel ALL --args selinux=0
+reboot
+
+firewall-cmd --get-default-zone
+firewall-cmd --list-services --permanent
+firewall-cmd --zone=public --permanent --add-service=http
+firewall-cmd --zone=public --permanent --add-service=https
+firewall-cmd --zone=public --add-port=5432/tcp --permanent
+firewall-cmd --reload	reload firewall	
+firewall-cmd --list-services --permanent
+	
+sudo systemctl start httpd		
+sudo systemctl enable httpd		
+	
+dnf install https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+dnf -qy module disable postgresql
+dnf install postgresql16-server -y
+/usr/pgsql-16/bin/postgresql-16-setup initdb
+systemctl enable postgresql-16
+systemctl start postgresql-16
+psql -V
+sudo -u postgres psql
+\password postgres
+	
+create database AAAAA;	ganti AAAAA dengan nama db yang diinginkan	
+create user BBBBB;	ganti BBBBBB dengan user yang diinginkan	
+alter user BBBBB with encrypted password 'XXXXXXX';	kasih password ke user yang baru dibuat	
+grant all privileges on database AAAAAA to BBBBBB;	kasih privilage ke user tersebut	
+\l	list table yang baru dibuat lalu \q untuk keluar	
+	
+create application db	create database telesurvey;	create telesurvey db	
+create database telecollection;	create telecollection db	
+\q	exit the psql	
+	
+install NVM dan Node JS	dnf groupinstall "Development Tools" -y 	install development tools	
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash	install nvm via script	
+source ~/.bashrc 	biar command langsung aktif tanpa harus restart console	
+nvm --version 	cek versi nvm nya udah sesuai belum (0.40.1)	
+nvm install 20.17.0	install node JS versi 20.xx.xx versi LTS (kalo mau disesuaikan sendiri tinggal ganti aja versinya)	
+nvm use 20.17.0	pakai versi node nya	
+nvm alias default  20.17.0	jadikan default	
+	
+Application Deployment	npm i -g pm2	install pm2 secara global	
+mkdir /var/apps/node-hcmi-middleware	buat directory apps di var	
+cd /var/apps/node-hcmi-middleware	masuk ke directory nya	
+git clone https://ravhirizaldi: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@github.com/Candi-Argo-Joyo/backend-midleware.git
+	clone aplikasinya ke root directory (PERHATIKAN (.) titik setelah spasi paling belakang!!	
+(SILAHKAN KONFIGURASI APLIKASI SEPERTI .ENV DLL)	
+pm2 start index.js --node-args="--experimental-specifier-resolution=node" --name HCMI-MW -i 4	start aplikasi melalui PM2, lalu yang di bold adalah nama service nya, silahkan sesuaikan	
+pm2 startup	pastikan pm2 berjalan saat startup	
+pm2 save	save proses PM2	
+	
+install php 5.6 depedency	yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm	install all php package	
+yum install php56	install base php56 package	
+yum install php56-php-mbstring php56-php-memcache php56-php-redis  php56-php-mysqli php56-php-pdo php56-php-pgsql	install php depedencies	
+systemctl start php-fpm	start the service	
+systemctl enable php-fpm	enable the service at startup	
+	
+install nginx	dnf install nginx -y	install nginx pkg	
+systemctl start nginx	start the service	
+systemctl enable nginx	enable the service at startup	
+mkdir /etc/nginx/sites-available (di cek dulu menggunakan command ls /etc/nginx kalo ada skip ini)	buat direktori untuk file sementara	
+mkdir /etc/nginx/sites-enabled  (di cek dulu menggunakan command ls /etc/nginx kalo ada skip ini)	buat direktori untuk file simbolic dari sites-available	
+nano /etc/nginx/nginx.conf	buka file konfigurasi	
+cari include /etc/nginx/conf.d/*.conf;	cari variable	
+lalu tambahkan include /etc/nginx/sites-enabled/*.conf; dibawahnya kalau tidak ada	tambahkan variable di baris baru	
+CTRL + X lalu Y dan ENTER untuk save	simpan konfigurasi	
+sudo nginx -t	lihat apakah konfigurasi ada error atau tidak	
+sudo systemctl restart nginx	restart kembali	
